@@ -1,0 +1,11 @@
+﻿node_modules/
+dist/
+target/
+.idea/
+.vscode/
+.trae-cn/
+*.log
+.DS_Store
+
+# 不上传包含数据库密码的本地配置
+campus-club-management/src/main/resources/application.yml
