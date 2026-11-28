@@ -89,7 +89,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useUserStore } from '@/store/user'
-import { getTopAnnouncements } from '@/api/announcement'
+import { getTopAnnouncements, getAnnouncementPage } from '@/api/announcement'
 import { getActivityPage } from '@/api/activity'
 import { getClubPage } from '@/api/club'
 import { getUserPage } from '@/api/user'
@@ -122,27 +122,27 @@ const getActivityStatusText = (status) => {
 }
 
 const loadData = async () => {
-  try {
-    // 统计数据
-    const [clubRes, userRes, activityRes] = await Promise.all([
-      getClubPage({ current: 1, size: 1 }),
-      getUserPage({ current: 1, size: 1 }),
-      getActivityPage({ current: 1, size: 1 })
-    ])
-    statsList.value[0].value = clubRes.data?.total || 0
-    statsList.value[1].value = userRes.data?.total || 0
-    statsList.value[2].value = activityRes.data?.total || 0
+  // 统计卡片：每个接口独立容错，单个无权限（如学生无用户管理权限）不影响其他卡片
+  const results = await Promise.allSettled([
+    getClubPage({ current: 1, size: 1 }),
+    getUserPage({ current: 1, size: 1 }),
+    getActivityPage({ current: 1, size: 1 }),
+    getAnnouncementPage({ current: 1, size: 1 })
+  ])
+  const totalOf = (r) => r.status === 'fulfilled' ? (r.value.data?.total || 0) : 0
+  statsList.value[0].value = totalOf(results[0])
+  statsList.value[1].value = totalOf(results[1])
+  statsList.value[2].value = totalOf(results[2])
+  statsList.value[3].value = totalOf(results[3])
 
-    // 公告
+  try {
     const annRes = await getTopAnnouncements()
     announcements.value = annRes.data || []
-
-    // 活动
+  } catch (e) { /* 无权限或失败时忽略 */ }
+  try {
     const actRes = await getActivityPage({ current: 1, size: 5 })
     activities.value = actRes.data?.records || []
-  } catch (e) {
-    console.error('加载首页数据失败', e)
-  }
+  } catch (e) { /* 无权限或失败时忽略 */ }
 }
 
 onMounted(() => {

@@ -1,6 +1,7 @@
 package org.example.campusclubmanagement.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.campusclubmanagement.common.Result;
 import org.example.campusclubmanagement.entity.Announcement;
@@ -49,7 +50,7 @@ public class AnnouncementController {
     /**
      * 根据ID查询公告
      */
-    @GetMapping("/{id}")
+    @GetMapping("/{id:\\d+}")
     public Result<Announcement> getById(@PathVariable Long id) {
         return Result.success(announcementService.getById(id));
     }
@@ -58,7 +59,7 @@ public class AnnouncementController {
      * 新增公告
      */
     @PostMapping
-    public Result<Void> add(@RequestBody Announcement announcement) {
+    public Result<Void> add(@Valid @RequestBody Announcement announcement) {
         announcementService.add(announcement);
         return Result.success();
     }
@@ -75,7 +76,7 @@ public class AnnouncementController {
     /**
      * 删除公告
      */
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id:\\d+}")
     public Result<Void> delete(@PathVariable Long id) {
         announcementService.delete(id);
         return Result.success();

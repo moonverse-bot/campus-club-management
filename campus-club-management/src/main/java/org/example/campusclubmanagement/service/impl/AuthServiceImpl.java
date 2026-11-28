@@ -17,6 +17,7 @@ import org.example.campusclubmanagement.service.AuthService;
 import org.example.campusclubmanagement.util.JwtUtil;
 import org.example.campusclubmanagement.util.UserContext;
 import org.springframework.beans.BeanUtils;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +31,8 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
+
+    private static final BCryptPasswordEncoder PASSWORD_ENCODER = new BCryptPasswordEncoder();
 
     private final UserMapper userMapper;
     private final UserRoleMapper userRoleMapper;
@@ -48,9 +51,20 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessException("账号已被禁用");
         }
 
-        // 验证密码（MD5）
-        String encryptedPassword = DigestUtil.md5Hex(loginDTO.getPassword());
-        if (!encryptedPassword.equals(user.getPassword())) {
+        // 验证密码：优先 BCrypt，兼容历史无盐 MD5 并在登录成功后自动升级
+        String rawPassword = loginDTO.getPassword();
+        String storedPassword = user.getPassword();
+        boolean matched;
+        if (storedPassword != null && storedPassword.startsWith("$2")) {
+            matched = PASSWORD_ENCODER.matches(rawPassword, storedPassword);
+        } else {
+            matched = storedPassword != null && DigestUtil.md5Hex(rawPassword).equals(storedPassword);
+            if (matched) {
+                user.setPassword(PASSWORD_ENCODER.encode(rawPassword));
+                userMapper.updateById(user);
+            }
+        }
+        if (!matched) {
             throw new BusinessException("用户名或密码错误");
         }
 
@@ -85,7 +99,7 @@ public class AuthServiceImpl implements AuthService {
 
         User user = new User();
         BeanUtils.copyProperties(registerDTO, user);
-        user.setPassword(DigestUtil.md5Hex(registerDTO.getPassword()));
+        user.setPassword(PASSWORD_ENCODER.encode(registerDTO.getPassword()));
         user.setNickname(registerDTO.getRealName());
         user.setStatus(1);
         user.setGender(0);

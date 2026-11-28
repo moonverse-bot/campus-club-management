@@ -7,5 +7,6 @@ target/
 *.log
 .DS_Store
 
-# 不上传包含数据库密码的本地配置
+# 本地配置含数据库密码与 JWT 密钥，不提交；克隆后请复制 application.yml.example 为 application.yml 并填写
 campus-club-management/src/main/resources/application.yml
+!campus-club-management/src/main/resources/application.yml.example

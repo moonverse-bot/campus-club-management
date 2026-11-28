@@ -18,6 +18,23 @@ export function getFundingApplicationPage(params) {
   })
 }
 
+// 部长查询自己提交的经费申请及审批结果
+export function getMyFundingApplications() {
+  return request({
+    url: '/funding-applications/my',
+    method: 'get'
+  })
+}
+
+// 超级管理员审批经费申请：status 1-通过 2-拒绝
+export function reviewFundingApplication(id, data) {
+  return request({
+    url: `/funding-applications/${id}/review`,
+    method: 'put',
+    data
+  })
+}
+
 // 删除经费申请
 export function deleteFundingApplication(id) {
   return request({

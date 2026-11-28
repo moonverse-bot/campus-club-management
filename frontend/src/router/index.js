@@ -75,6 +75,12 @@ const routes = [
         meta: { title: '公告管理', icon: 'Bell' }
       },
       {
+        path: 'dynamics',
+        name: 'DynamicList',
+        component: () => import('@/views/dynamic/index.vue'),
+        meta: { title: '社团动态', icon: 'ChatDotRound' }
+      },
+      {
         path: 'profile',
         name: 'Profile',
         component: () => import('@/views/profile/index.vue'),

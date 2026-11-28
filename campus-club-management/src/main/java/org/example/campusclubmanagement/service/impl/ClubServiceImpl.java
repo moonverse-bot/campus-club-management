@@ -9,6 +9,7 @@ import org.example.campusclubmanagement.entity.Club;
 import org.example.campusclubmanagement.exception.BusinessException;
 import org.example.campusclubmanagement.mapper.ClubMapper;
 import org.example.campusclubmanagement.service.ClubService;
+import org.example.campusclubmanagement.service.PermissionChecker;
 import org.springframework.stereotype.Service;
 
 /**
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Service;
 public class ClubServiceImpl implements ClubService {
 
     private final ClubMapper clubMapper;
+    private final PermissionChecker permissionChecker;
 
     @Override
     public PageResult<Club> pageList(ClubQueryDTO queryDTO) {
@@ -55,6 +57,7 @@ public class ClubServiceImpl implements ClubService {
 
     @Override
     public void add(Club club) {
+        permissionChecker.checkAdmin();
         // 检查社团名称是否已存在
         Long count = clubMapper.selectCount(new LambdaQueryWrapper<Club>()
                 .eq(Club::getClubName, club.getClubName()));
@@ -72,6 +75,7 @@ public class ClubServiceImpl implements ClubService {
 
     @Override
     public void update(Club club) {
+        permissionChecker.checkAdmin();
         if (club.getId() == null) {
             throw new BusinessException("社团ID不能为空");
         }
@@ -80,6 +84,7 @@ public class ClubServiceImpl implements ClubService {
 
     @Override
     public void delete(Long id) {
+        permissionChecker.checkAdmin();
         clubMapper.deleteById(id);
     }
 

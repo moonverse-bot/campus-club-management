@@ -8,6 +8,7 @@ import org.example.campusclubmanagement.exception.BusinessException;
 import org.example.campusclubmanagement.mapper.ClubMapper;
 import org.example.campusclubmanagement.mapper.ClubMemberMapper;
 import org.example.campusclubmanagement.service.ClubMemberService;
+import org.example.campusclubmanagement.service.PermissionChecker;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +24,7 @@ public class ClubMemberServiceImpl implements ClubMemberService {
 
     private final ClubMemberMapper clubMemberMapper;
     private final ClubMapper clubMapper;
+    private final PermissionChecker permissionChecker;
 
     @Override
     public List<ClubMember> listByClubId(Long clubId) {
@@ -58,6 +60,12 @@ public class ClubMemberServiceImpl implements ClubMemberService {
     @Override
     @Transactional
     public void add(ClubMember member) {
+        permissionChecker.checkClubManager(member.getClubId());
+        // 非系统管理员只能添加普通成员，防止越权提拔
+        if (!permissionChecker.isAdmin() && member.getPosition() != null
+                && !"member".equals(member.getPosition())) {
+            throw new BusinessException(403, "无权设置该成员职位");
+        }
         // 检查是否已在社团中
         ClubMember exist = getByClubAndUser(member.getClubId(), member.getUserId());
         if (exist != null && exist.getStatus() == 1) {
@@ -88,6 +96,22 @@ public class ClubMemberServiceImpl implements ClubMemberService {
 
     @Override
     public void update(ClubMember member) {
+        if (member.getId() == null) {
+            throw new BusinessException("成员ID不能为空");
+        }
+        ClubMember existing = clubMemberMapper.selectById(member.getId());
+        if (existing == null) {
+            throw new BusinessException("成员不存在");
+        }
+        permissionChecker.checkClubManager(existing.getClubId());
+        // 非系统管理员不能调整职位，避免通过更新接口越权提拔
+        if (!permissionChecker.isAdmin() && member.getPosition() != null
+                && !member.getPosition().equals(existing.getPosition())) {
+            throw new BusinessException(403, "无权修改成员职位");
+        }
+        // 成员归属不可通过更新接口变更
+        member.setClubId(null);
+        member.setUserId(null);
         clubMemberMapper.updateById(member);
     }
 
@@ -98,6 +122,7 @@ public class ClubMemberServiceImpl implements ClubMemberService {
         if (member == null) {
             throw new BusinessException("成员不存在");
         }
+        permissionChecker.checkClubManager(member.getClubId());
         clubMemberMapper.deleteById(id);
         updateClubMemberCount(member.getClubId());
     }
@@ -105,6 +130,9 @@ public class ClubMemberServiceImpl implements ClubMemberService {
     @Override
     @Transactional
     public void quitClub(Long clubId, Long userId) {
+        if (!permissionChecker.currentUserId().equals(userId)) {
+            throw new BusinessException(403, "只能退出自己所在的社团");
+        }
         ClubMember member = getByClubAndUser(clubId, userId);
         if (member == null) {
             throw new BusinessException("您不是该社团成员");

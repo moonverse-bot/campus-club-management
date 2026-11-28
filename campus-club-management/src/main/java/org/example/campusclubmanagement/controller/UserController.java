@@ -30,7 +30,7 @@ public class UserController {
     /**
      * 根据ID查询用户
      */
-    @GetMapping("/{id}")
+    @GetMapping("/{id:\\d+}")
     public Result<UserVO> getById(@PathVariable Long id) {
         return Result.success(userService.getById(id));
     }
@@ -47,7 +47,7 @@ public class UserController {
     /**
      * 删除用户
      */
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id:\\d+}")
     public Result<Void> delete(@PathVariable Long id) {
         userService.delete(id);
         return Result.success();

@@ -211,6 +211,10 @@ CREATE TABLE `activity_funding_application` (
     `applicant_id` BIGINT NOT NULL COMMENT '申请部长用户ID',
     `amount` DECIMAL(12,2) NOT NULL COMMENT '申请金额',
     `reason` VARCHAR(500) NOT NULL COMMENT '经费用途说明',
+    `status` TINYINT NOT NULL DEFAULT 0 COMMENT '审批状态：0-待审批，1-已通过，2-已拒绝',
+    `reviewer_id` BIGINT DEFAULT NULL COMMENT '审批人用户ID',
+    `review_time` DATETIME DEFAULT NULL COMMENT '审批时间',
+    `review_remark` VARCHAR(500) DEFAULT NULL COMMENT '审批意见',
     `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '申请时间',
     `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     `deleted` TINYINT DEFAULT 0 COMMENT '逻辑删除：0-未删除，1-已删除',
@@ -218,6 +222,7 @@ CREATE TABLE `activity_funding_application` (
     KEY `idx_activity_id` (`activity_id`),
     KEY `idx_club_id` (`club_id`),
     KEY `idx_applicant_id` (`applicant_id`),
+    KEY `idx_status` (`status`),
     KEY `idx_create_time` (`create_time`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='活动经费申请表';
 

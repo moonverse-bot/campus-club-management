@@ -1,5 +1,6 @@
 package org.example.campusclubmanagement.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.campusclubmanagement.common.Result;
 import org.example.campusclubmanagement.dto.LoginDTO;
@@ -23,7 +24,7 @@ public class AuthController {
      * 登录
      */
     @PostMapping("/login")
-    public Result<LoginVO> login(@RequestBody LoginDTO loginDTO) {
+    public Result<LoginVO> login(@Valid @RequestBody LoginDTO loginDTO) {
         LoginVO loginVO = authService.login(loginDTO);
         return Result.success(loginVO);
     }
@@ -32,7 +33,7 @@ public class AuthController {
      * 注册
      */
     @PostMapping("/register")
-    public Result<Void> register(@RequestBody RegisterDTO registerDTO) {
+    public Result<Void> register(@Valid @RequestBody RegisterDTO registerDTO) {
         authService.register(registerDTO);
         return Result.success();
     }

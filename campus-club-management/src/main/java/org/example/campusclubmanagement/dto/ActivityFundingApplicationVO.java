@@ -32,5 +32,14 @@ public class ActivityFundingApplicationVO implements Serializable {
 
     private String reason;
 
+    /** 0-待审批，1-已通过，2-已拒绝 */
+    private Integer status;
+
+    private String reviewerName;
+
+    private LocalDateTime reviewTime;
+
+    private String reviewRemark;
+
     private LocalDateTime createTime;
 }

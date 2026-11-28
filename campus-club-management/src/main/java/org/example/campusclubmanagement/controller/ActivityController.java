@@ -1,5 +1,6 @@
 package org.example.campusclubmanagement.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.campusclubmanagement.common.PageResult;
 import org.example.campusclubmanagement.common.Result;
@@ -34,13 +35,13 @@ public class ActivityController {
         return Result.success(activityService.listManageOptions());
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id:\\d+}")
     public Result<ActivityVO> getById(@PathVariable Long id) {
         return Result.success(activityService.getById(id));
     }
 
     @PostMapping
-    public Result<Void> add(@RequestBody Activity activity) {
+    public Result<Void> add(@Valid @RequestBody Activity activity) {
         activityService.add(activity);
         return Result.success();
     }
@@ -51,14 +52,14 @@ public class ActivityController {
         return Result.success();
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id:\\d+}")
     public Result<Void> delete(@PathVariable Long id) {
         activityService.delete(id);
         return Result.success();
     }
 
     @PutMapping("/{id}/review")
-    public Result<Void> reviewActivity(@PathVariable Long id, @RequestBody ActivityReviewDTO reviewDTO) {
+    public Result<Void> reviewActivity(@PathVariable Long id, @Valid @RequestBody ActivityReviewDTO reviewDTO) {
         activityService.reviewActivity(id, reviewDTO);
         return Result.success();
     }

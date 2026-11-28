@@ -2,7 +2,7 @@
   <div class="page-container">
     <div class="page-header">
       <h2>用户管理</h2>
-      <p>{{ readOnlyUser ? (isSuperAdmin ? '查看社长和副社长信息' : '查看本社团成员信息') : '管理系统中的用户信息' }}</p>
+      <p>管理系统中的用户信息</p>
     </div>
 
     <div class="card-container">
@@ -201,12 +201,10 @@ const roleLevelMap = {
 const currentRoleLevel = computed(() =>
   Math.max(0, ...userStore.roles.map(role => roleLevelMap[role] ?? 0))
 )
-const isSuperAdmin = computed(() => userStore.roles.includes('SUPER_ADMIN'))
-const readOnlyUser = computed(() => isSuperAdmin.value || userStore.roles.includes('PRESIDENT'))
-const formReadOnly = computed(() => readOnlyUser.value || viewOnly.value)
+const formReadOnly = computed(() => viewOnly.value)
 
 const canManage = (row) => {
-  if (readOnlyUser.value || !row.roles?.length) return false
+  if (!row.roles?.length) return false
   const targetRoleLevel = Math.max(...row.roles.map(role => roleLevelMap[role] ?? Number.MAX_SAFE_INTEGER))
   return targetRoleLevel < currentRoleLevel.value
 }
@@ -257,7 +255,6 @@ const handleView = (row) => {
 }
 
 const handleEdit = (row) => {
-  if (readOnlyUser.value) return
   viewOnly.value = false
   Object.assign(editForm, row)
   editDialogVisible.value = true

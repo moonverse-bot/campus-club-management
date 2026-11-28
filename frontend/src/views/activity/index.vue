@@ -30,9 +30,12 @@
             <el-button @click="handleReset">重置</el-button>
           </el-form-item>
         </el-form>
-        <el-button v-if="activeScope === 'managed' && !isSuperAdmin && manageOptions.length" type="primary" @click="handleAdd">
-          <el-icon><Plus /></el-icon> 新增活动
-        </el-button>
+        <div class="toolbar-actions">
+          <el-button v-if="activeScope === 'managed' && !isSuperAdmin && manageOptions.length" type="primary" @click="handleAdd">
+            <el-icon><Plus /></el-icon> 新增活动
+          </el-button>
+          <el-button v-if="activeScope === 'managed' && !isSuperAdmin" @click="handleViewMyFunding">我的经费申请</el-button>
+        </div>
       </div>
 
       <el-alert
@@ -243,6 +246,32 @@
         <el-button type="primary" :loading="fundingSubmitLoading" @click="submitFunding">提交申请</el-button>
       </template>
     </el-dialog>
+
+    <el-dialog v-model="myFundingVisible" title="我的经费申请" width="900px">
+      <el-table :data="myFundingList" v-loading="myFundingLoading" stripe>
+        <el-table-column prop="activityTitle" label="申请活动" min-width="150" show-overflow-tooltip />
+        <el-table-column prop="clubName" label="社团" min-width="120" />
+        <el-table-column label="金额" width="120" align="right">
+          <template #default="{ row }">¥ {{ Number(row.amount || 0).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</template>
+        </el-table-column>
+        <el-table-column prop="reason" label="用途说明" min-width="160" show-overflow-tooltip />
+        <el-table-column label="审批状态" width="100" align="center">
+          <template #default="{ row }">
+            <el-tag :type="getFundingStatusType(row.status)" size="small">{{ getFundingStatusText(row.status) }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="审批人" width="100">
+          <template #default="{ row }">{{ row.reviewerName || '-' }}</template>
+        </el-table-column>
+        <el-table-column label="审批意见" min-width="140" show-overflow-tooltip>
+          <template #default="{ row }">{{ row.reviewRemark || '-' }}</template>
+        </el-table-column>
+        <el-table-column label="申请时间" width="150">
+          <template #default="{ row }">{{ formatTime(row.createTime) }}</template>
+        </el-table-column>
+      </el-table>
+      <el-empty v-if="!myFundingLoading && myFundingList.length === 0" description="暂无经费申请" />
+    </el-dialog>
   </div>
 </template>
 
@@ -260,7 +289,7 @@ import {
   reviewActivityRegistration,
   reviewActivity
 } from '@/api/activity'
-import { createFundingApplication } from '@/api/funding'
+import { createFundingApplication, getMyFundingApplications } from '@/api/funding'
 import { useUserStore } from '@/store/user'
 
 const userStore = useUserStore()
@@ -285,6 +314,9 @@ const activityReviewingId = ref(null)
 const fundingVisible = ref(false)
 const fundingSubmitLoading = ref(false)
 const fundingForm = reactive({ amount: null, reason: '' })
+const myFundingVisible = ref(false)
+const myFundingLoading = ref(false)
+const myFundingList = ref([])
 
 const searchForm = reactive({ keyword: '', status: null, current: 1, size: 10 })
 const emptyForm = () => ({
@@ -471,6 +503,20 @@ const submitFunding = async () => {
     fundingVisible.value = false
   } finally {
     fundingSubmitLoading.value = false
+  }
+}
+
+const getFundingStatusType = (status) => ({ 0: 'warning', 1: 'success', 2: 'danger' })[status] || 'info'
+const getFundingStatusText = (status) => ({ 0: '待审批', 1: '已通过', 2: '已拒绝' })[status] || '-'
+
+const handleViewMyFunding = async () => {
+  myFundingVisible.value = true
+  myFundingLoading.value = true
+  try {
+    const res = await getMyFundingApplications()
+    myFundingList.value = res.data || []
+  } finally {
+    myFundingLoading.value = false
   }
 }
 

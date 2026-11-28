@@ -109,7 +109,8 @@ const menuList = computed(() => [
     icon: 'Coin',
     roles: ['SUPER_ADMIN']
   },
-  { path: '/announcements', title: '公告管理', icon: 'Bell' }
+  { path: '/announcements', title: '公告管理', icon: 'Bell' },
+  { path: '/dynamics', title: '社团动态', icon: 'ChatDotRound' }
 ].filter(item => !item.roles || item.roles.some(role => userStore.roles.includes(role))))
 
 const toggleCollapse = () => {

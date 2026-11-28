@@ -1,5 +1,6 @@
 package org.example.campusclubmanagement.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.campusclubmanagement.common.PageResult;
 import org.example.campusclubmanagement.common.Result;
@@ -29,7 +30,7 @@ public class ClubController {
     /**
      * 根据ID查询社团
      */
-    @GetMapping("/{id}")
+    @GetMapping("/{id:\\d+}")
     public Result<Club> getById(@PathVariable Long id) {
         return Result.success(clubService.getById(id));
     }
@@ -38,7 +39,7 @@ public class ClubController {
      * 新增社团
      */
     @PostMapping
-    public Result<Void> add(@RequestBody Club club) {
+    public Result<Void> add(@Valid @RequestBody Club club) {
         clubService.add(club);
         return Result.success();
     }
@@ -55,7 +56,7 @@ public class ClubController {
     /**
      * 删除社团
      */
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id:\\d+}")
     public Result<Void> delete(@PathVariable Long id) {
         clubService.delete(id);
         return Result.success();

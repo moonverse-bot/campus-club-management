@@ -1,12 +1,14 @@
 package org.example.campusclubmanagement.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import org.example.campusclubmanagement.common.PageResult;
 import org.example.campusclubmanagement.dto.ActivityFundingApplicationCreateDTO;
 import org.example.campusclubmanagement.dto.ActivityFundingApplicationQueryDTO;
 import org.example.campusclubmanagement.dto.ActivityFundingApplicationVO;
+import org.example.campusclubmanagement.dto.ActivityReviewDTO;
 import org.example.campusclubmanagement.entity.Activity;
 import org.example.campusclubmanagement.entity.ActivityFundingApplication;
 import org.example.campusclubmanagement.entity.ClubMember;
@@ -20,6 +22,7 @@ import org.example.campusclubmanagement.util.UserContext;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -65,6 +68,10 @@ public class ActivityFundingApplicationServiceImpl implements ActivityFundingApp
         application.setApplicantId(currentUserId);
         application.setAmount(createDTO.getAmount());
         application.setReason(createDTO.getReason().trim());
+        application.setStatus(0);
+        application.setReviewerId(null);
+        application.setReviewTime(null);
+        application.setReviewRemark(null);
         fundingApplicationMapper.insert(application);
     }
 
@@ -76,6 +83,44 @@ public class ActivityFundingApplicationServiceImpl implements ActivityFundingApp
         Page<ActivityFundingApplicationVO> page = fundingApplicationMapper.selectAdminPage(
                 new Page<>(queryDTO.getCurrent(), queryDTO.getSize()), keyword);
         return new PageResult<>(page.getTotal(), page.getPages(), page.getCurrent(), page.getSize(), page.getRecords());
+    }
+
+    @Override
+    public List<ActivityFundingApplicationVO> listMine() {
+        Long currentUserId = getCurrentUserId();
+        Page<ActivityFundingApplicationVO> page = fundingApplicationMapper.selectMinePage(
+                new Page<>(1, 100), currentUserId);
+        return page.getRecords();
+    }
+
+    @Override
+    public void review(Long id, ActivityReviewDTO reviewDTO) {
+        checkSuperAdmin();
+        if (reviewDTO == null || (!Integer.valueOf(1).equals(reviewDTO.getStatus())
+                && !Integer.valueOf(2).equals(reviewDTO.getStatus()))) {
+            throw new BusinessException("审批结果只能为通过或拒绝");
+        }
+        String remark = reviewDTO.getReviewRemark() == null ? null : reviewDTO.getReviewRemark().trim();
+        if (remark != null && remark.length() > 500) {
+            throw new BusinessException("审批意见不能超过500个字符");
+        }
+        ActivityFundingApplication application = fundingApplicationMapper.selectById(id);
+        if (application == null) {
+            throw new BusinessException("经费申请不存在");
+        }
+        if (!Integer.valueOf(0).equals(application.getStatus())) {
+            throw new BusinessException("该经费申请已处理，不能重复审批");
+        }
+        int updated = fundingApplicationMapper.update(null, new LambdaUpdateWrapper<ActivityFundingApplication>()
+                .eq(ActivityFundingApplication::getId, id)
+                .eq(ActivityFundingApplication::getStatus, 0)
+                .set(ActivityFundingApplication::getStatus, reviewDTO.getStatus())
+                .set(ActivityFundingApplication::getReviewerId, getCurrentUserId())
+                .set(ActivityFundingApplication::getReviewTime, LocalDateTime.now())
+                .set(ActivityFundingApplication::getReviewRemark, remark));
+        if (updated == 0) {
+            throw new BusinessException("该经费申请已被其他管理员处理");
+        }
     }
 
     @Override

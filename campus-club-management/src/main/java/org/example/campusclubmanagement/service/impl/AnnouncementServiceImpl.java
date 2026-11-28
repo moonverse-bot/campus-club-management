@@ -8,6 +8,7 @@ import org.example.campusclubmanagement.entity.Announcement;
 import org.example.campusclubmanagement.exception.BusinessException;
 import org.example.campusclubmanagement.mapper.AnnouncementMapper;
 import org.example.campusclubmanagement.service.AnnouncementService;
+import org.example.campusclubmanagement.service.PermissionChecker;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -20,6 +21,7 @@ import java.util.List;
 public class AnnouncementServiceImpl implements AnnouncementService {
 
     private final AnnouncementMapper announcementMapper;
+    private final PermissionChecker permissionChecker;
 
     @Override
     public List<Announcement> listTop() {
@@ -58,6 +60,7 @@ public class AnnouncementServiceImpl implements AnnouncementService {
 
     @Override
     public void add(Announcement announcement) {
+        checkAnnouncementPermission(announcement.getClubId());
         if (announcement.getIsTop() == null) {
             announcement.setIsTop(0);
         }
@@ -66,11 +69,35 @@ public class AnnouncementServiceImpl implements AnnouncementService {
 
     @Override
     public void update(Announcement announcement) {
+        if (announcement.getId() == null) {
+            throw new BusinessException("公告ID不能为空");
+        }
+        Announcement existing = announcementMapper.selectById(announcement.getId());
+        if (existing == null) {
+            throw new BusinessException("公告不存在");
+        }
+        checkAnnouncementPermission(existing.getClubId());
+        // 公告归属不可通过更新接口变更，避免绕过发布权限
+        announcement.setClubId(existing.getClubId());
         announcementMapper.updateById(announcement);
     }
 
     @Override
     public void delete(Long id) {
+        Announcement existing = announcementMapper.selectById(id);
+        if (existing == null) {
+            throw new BusinessException("公告不存在");
+        }
+        checkAnnouncementPermission(existing.getClubId());
         announcementMapper.deleteById(id);
+    }
+
+    /** 全校公告(无 clubId)仅系统管理员可发；社团公告限本社团管理者 */
+    private void checkAnnouncementPermission(Long clubId) {
+        if (clubId == null) {
+            permissionChecker.checkAdmin();
+        } else {
+            permissionChecker.checkClubManager(clubId);
+        }
     }
 }

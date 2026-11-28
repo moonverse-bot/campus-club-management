@@ -97,7 +97,6 @@ public class UserServiceImpl implements UserService {
         }
         if (!getCurrentUserId().equals(user.getId())) {
             checkManagePermission(user.getId());
-            checkUserMutationPermission();
         }
 
         // 个人中心和用户管理共用此接口，只允许修改资料字段。
@@ -115,7 +114,6 @@ public class UserServiceImpl implements UserService {
     @Override
     public void delete(Long id) {
         checkManagePermission(id);
-        checkUserMutationPermission();
         userMapper.deleteById(id);
     }
 
@@ -125,7 +123,6 @@ public class UserServiceImpl implements UserService {
             throw new BusinessException("用户状态无效");
         }
         checkManagePermission(id);
-        checkUserMutationPermission();
         User user = new User();
         user.setId(id);
         user.setStatus(status);
@@ -163,16 +160,6 @@ public class UserServiceImpl implements UserService {
         }
         if (!hasSystemScope(currentRoles) && !isSameClub(currentUserId, targetUserId)) {
             throw new BusinessException(403, "只能管理本社团内的成员");
-        }
-    }
-
-    private void checkUserMutationPermission() {
-        List<String> currentRoles = getCurrentManagerRoles();
-        if (currentRoles.contains("SUPER_ADMIN")) {
-            throw new BusinessException(403, "超级管理员只能查看社长和副社长信息");
-        }
-        if (currentRoles.contains("PRESIDENT")) {
-            throw new BusinessException(403, "社长只能查看成员信息");
         }
     }
 

@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 /**
  * 活动经费申请实体
@@ -23,4 +24,13 @@ public class ActivityFundingApplication extends BaseEntity {
     private BigDecimal amount;
 
     private String reason;
+
+    /** 0-待审批，1-已通过，2-已拒绝 */
+    private Integer status;
+
+    private Long reviewerId;
+
+    private LocalDateTime reviewTime;
+
+    private String reviewRemark;
 }

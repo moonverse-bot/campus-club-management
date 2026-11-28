@@ -1,5 +1,6 @@
 package org.example.campusclubmanagement.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.campusclubmanagement.common.Result;
 import org.example.campusclubmanagement.dto.MinisterSuccessionCreateDTO;
@@ -27,7 +28,7 @@ public class MinisterSuccessionController {
     }
 
     @PostMapping
-    public Result<Void> create(@RequestBody MinisterSuccessionCreateDTO createDTO) {
+    public Result<Void> create(@Valid @RequestBody MinisterSuccessionCreateDTO createDTO) {
         successionService.create(createDTO);
         return Result.success();
     }
@@ -43,7 +44,7 @@ public class MinisterSuccessionController {
     }
 
     @PutMapping("/{id}/review")
-    public Result<Void> review(@PathVariable Long id, @RequestBody MinisterSuccessionReviewDTO reviewDTO) {
+    public Result<Void> review(@PathVariable Long id, @Valid @RequestBody MinisterSuccessionReviewDTO reviewDTO) {
         successionService.review(id, reviewDTO);
         return Result.success();
     }

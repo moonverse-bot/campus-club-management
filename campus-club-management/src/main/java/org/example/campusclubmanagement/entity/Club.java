@@ -1,6 +1,7 @@
 package org.example.campusclubmanagement.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -12,8 +13,10 @@ import lombok.EqualsAndHashCode;
 @TableName("club")
 public class Club extends BaseEntity {
 
+    @NotBlank(message = "社团名称不能为空")
     private String clubName;
 
+    @NotBlank(message = "社团编码不能为空")
     private String clubCode;
 
     private String description;
